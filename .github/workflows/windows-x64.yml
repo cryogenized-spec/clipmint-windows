@@ -1,0 +1,68 @@
+name: Build ClipMint Windows x64 (isolated alpha)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 45
+    steps:
+      - name: Checkout independent Windows source
+        uses: actions/checkout@v4
+      - name: Set up Python 3.12 x64
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: 'x64'
+          cache: 'pip'
+      - name: Install Qt and PyInstaller
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-windows.txt
+      - name: Unit tests and Python syntax
+        shell: pwsh
+        run: |
+          python -m compileall -q main.py clipmint_windows tests
+          python -m unittest discover -s tests -v
+      - name: Qt offscreen self-test
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python main.py --self-test
+      - name: Generate Windows application icon
+        shell: pwsh
+        run: python tools/make_icon.py
+      - name: Package Windows x64 desktop executable
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --clean --onedir --windowed --name ClipMint-Windows --icon assets/ClipMint.ico --add-data "assets;assets" main.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path dist/ClipMint-Windows/ClipMint-Windows.exe)) { throw 'EXE missing' }
+      - name: Frozen executable smoke test (not a desktop field test)
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          & ./dist/ClipMint-Windows/ClipMint-Windows.exe --self-test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Zip portable alpha and generate checksum
+        shell: pwsh
+        run: |
+          New-Item -Type Directory -Force artifacts | Out-Null
+          Compress-Archive -Path dist/ClipMint-Windows/* -DestinationPath artifacts/ClipMint-Windows-x64-alpha.zip -Force
+          (Get-FileHash artifacts/ClipMint-Windows-x64-alpha.zip -Algorithm SHA256).Hash.ToLower() + '  ClipMint-Windows-x64-alpha.zip' | Out-File -Encoding ascii artifacts/SHA256SUMS
+      - name: Upload CI artifact (no GitHub release or installer publishing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClipMint-Windows-x64-alpha
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 14
