@@ -47,6 +47,11 @@ jobs:
                       or relative.as_posix() in {'LICENSE', 'README.md', 'assets/ClipMint.png'}):
                   raise SystemExit('Disallowed source path')
               seen.add(relative.as_posix())
+              # GitHub Actions' installation token cannot alter workflow files.
+              # That one workflow is added separately by the authenticated GitHub connector.
+              if relative.as_posix() == '.github/workflows/windows-x64.yml':
+                  print('Deferred CI workflow to repository connection')
+                  continue
               target = Path.cwd() / relative
               target.parent.mkdir(parents=True, exist_ok=True)
               target.write_text(entry['content'], encoding='utf-8')
@@ -55,8 +60,7 @@ jobs:
           for chunk in Path('bootstrap').glob('source_*.b64'):
               chunk.unlink()
           Path('bootstrap').rmdir()
-          Path('.github/workflows/bootstrap-source.yml').unlink()
-          print('Source import verified and temporary bootstrap removed')
+          print('Source import verified; existing bootstrap workflow retained until admin cleanup')
           PY
       - name: Commit normal source files to this Windows repository
         shell: bash
