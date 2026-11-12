@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (
 )
 
 from .history import History, default_data_dir
+from .drag_export import DragImageExport
+from .drag_mime import mime_for_drag
 from .hotkeys import WindowsHotkey
 from .recording import Recorder
 from .screenshot import RegionSelector
@@ -68,16 +70,14 @@ class ClipList(QListWidget):
         row = self.owner.history.get(int(item.data(Qt.ItemDataRole.UserRole)))
         if row is None:
             return
-        mime = QMimeData()
-        if row["kind"] == "IMAGE" and row["image"]:
-            pix = QPixmap()
-            pix.loadFromData(row["image"], "PNG")
-            mime.setImageData(pix.toImage())
-        elif row["kind"] == "FILES":
-            paths = json.loads(row["body"])
-            mime.setUrls([QUrl.fromLocalFile(p) for p in paths])
-        else:
-            mime.setText(row["body"])
+        try:
+            mime = mime_for_drag(row, self.owner._drag_exports)
+        except (OSError, ValueError) as exc:
+            self.owner.status.showMessage(f"Cannot drag this item: {exc}", 5000)
+            return
+        if mime is None:
+            self.owner.status.showMessage("This item is unavailable for dragging", 4000)
+            return
         drag = QDrag(self)
         drag.setMimeData(mime)
         drag.exec(Qt.DropAction.CopyAction)
@@ -88,6 +88,7 @@ class ClipMintWindow(QMainWindow):
         super().__init__()
         self.history = history or History()
         self.recorder = Recorder()
+        self._drag_exports = DragImageExport()
         self.monitoring = True
         self._quit_requested = False
         self._cleaned_up = False
@@ -524,6 +525,7 @@ class ClipMintWindow(QMainWindow):
             self.recorder.abort()
         if self._hotkeys:
             self._hotkeys.stop()
+        self._drag_exports.cleanup()
         self.history.close()
 
     def quit_app(self):
