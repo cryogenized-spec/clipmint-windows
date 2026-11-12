@@ -1,0 +1,7 @@
+ClipMint Windows x64 alpha (independent source edition)
+Source code license: AGPL-3.0-only, subject to proper copyright notices.
+Main project reference: https://github.com/cryogenized-spec/clipmint-linux
+The included ClipMint logo was approved for the project's use by the user.
+NO additional Crimson/Kohaku character illustration is included.
+No publicly signed or audited Windows release has been made.
+GNU AGPL-3.0: https://www.gnu.org/licenses/agpl-3.0.txt
