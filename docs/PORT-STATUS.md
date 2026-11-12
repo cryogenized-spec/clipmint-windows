@@ -3,7 +3,7 @@
 **Edition:** `ClipMint-Windows` (standalone, separate from `clipmint-linux`).
 **Source revision:** alpha prototype `0.1.0a1`.
 **Build format:** PyInstaller `--onedir` portable x64 ZIP; not an installer.
-**Release approval:** NOT APPROVED. This ZIP contains source code and build instructions, not a Windows executable.
+**Release approval:** NOT APPROVED. A CI-built unsigned portable Windows EXE exists, but desktop field acceptance is incomplete.
 
 ## Completed in the separate Windows source tree
 
@@ -22,8 +22,8 @@
 
 - [x] Python files compile via `compileall` in Linux development environment.
 - [x] 14 platform-independent unit tests pass in Linux development environment.
-- [ ] Qt UI self-test **on Windows** (PySide6 unavailable in current working environment).
-- [ ] PyInstaller frozen `.exe` smoke test **on Windows**.
+- [x] Qt UI offscreen self-test **on Windows** (GitHub Actions run [43283518462](https://github.com/cryogenized-spec/clipmint-windows/actions/runs/43283518462)).
+- [x] PyInstaller frozen `.exe` smoke test **on Windows** (same CI run; not a physical Windows GUI acceptance).
 - [ ] Actual Windows 11 desktop clipboard, multi-process copy/paste and tray test.
 - [ ] Actual Windows screen capture / mixed DPI / multi-monitor test.
 - [ ] Actual Windows FFmpeg MP4 video sample playback test.
@@ -34,9 +34,9 @@
 
 **W0 — Source and packaging scaffold:** implemented. Package exists as `ClipMint-Windows-x64-source-alpha.zip`. Build workflow only runs after this source is pushed to its own GitHub repository.
 
-**W1 — CI-built portable Windows executable:** pending (private Windows GitHub repository creation, GitHub runner execution and artifact verification). Running `build-windows.ps1` locally on Windows x64 is an alternative.
+**W1 — CI-built portable Windows executable:** complete as an unsigned alpha on the independent public `cryogenized-spec/clipmint-windows` repository. CI [43283518462](https://github.com/cryogenized-spec/clipmint-windows/actions/runs/43283518462) passed 14 unit tests, the Qt self-test and frozen executable smoke test; no physical acceptance yet.
 
-**W2 — Field acceptance and feature parity:** pending (reliability of clipboard ownership, drag into native applications, screen selection, DPI scaling, FFmpeg recording, startup and safe Quit). No claim of full Linux parity yet.
+**W2 — Field acceptance and feature parity:** active. The Windows image drag bridge provides on-demand temporary PNG file URLs as well as Qt image MIME for file-upload targets; automated MIME tests are added but real Firefox upload validation is pending. Clipboard ownership, screen selection, mixed DPI, FFmpeg recording, startup and safe Quit still require physical acceptance. No claim of full Linux parity yet.
 
 **W3 — Public Windows beta:** pending (complete AGPL license text, artifact rights, Win32 validation, code signing or clear unsigned warnings, installation/updating policy and user approval).
 
