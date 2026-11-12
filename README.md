@@ -14,7 +14,7 @@ A **standalone** Windows port prototype of ClipMint, with a separate directory, 
 - Single-monitor rectangle selection for screenshots, saved under `ClipMintWindows\Screenshots` and also archived in SQLite if within the 10 MB image cap.
 - Optional Windows MP4 region recording using a **user-installed FFmpeg for Windows**, `gdigrab` and `libx264`. No FFmpeg is downloaded silently or shipped.
 - Optional global `Ctrl+Shift+S` screenshot shortcut using Win32 `RegisterHotKey`, if the combination is free. No keyboard hooks or code injection.
-- Local drag-copy of supported text, image data and file references. Drop targets vary; screenshots are not yet turned into temporary CF_HDROP upload files.
+- Drag-copy text and existing files. When an archived IMAGE is deliberately dragged, ClipMint now prepares a per-session temporary PNG and advertises both a local-file URL and image pixels; this is intended for Windows/Firefox file inputs but still requires physical Windows acceptance. Ordinary application Quit attempts to remove temporary images; a crash may leave temporary copies in the user temp folder.
 - Optional system tray. An explicit Quit ends monitoring.
 
 ## Requirements
