@@ -53,4 +53,4 @@ Alternatively, initialize this directory as its **own new GitHub repository** (s
 
 ## Separate code and licensing
 
-This Windows edition is an independent source tree, designed to be maintained as its own repository and to ship separate packages. New code is designated `AGPL-3.0-only`, consistent with the main ClipMint source project. Preserve attribution and review any reused artwork or third-party components before public redistribution. The complete license text should be included before public publishing; see the official GNU license: https://www.gnu.org/licenses/agpl-3.0.txt .
+This Windows edition is an independent source tree, designed to be maintained as its own repository and to ship separate packages. New code is designated `AGPL-3.0-only`, consistent with the main ClipMint source project. Preserve attribution and review any reused artwork or third-party components before public redistribution. The full GNU AGPL-3.0-only license text is included in `LICENSE`; do not treat the separate project artwork as automatically licensed under it.
