@@ -71,7 +71,7 @@ class DragMimeTests(unittest.TestCase):
                                   "body": json.dumps([str(missing), str(keep)])},
                                  DragImageExport())
             self.assertTrue(mime.hasUrls())
-            self.assertEqual([u.toLocalFile() for u in mime.urls()], [str(keep)])
+            self.assertEqual([Path(u.toLocalFile()) for u in mime.urls()], [keep])
 
     def test_invalid_records_fail_closed(self):
         exporter = DragImageExport()
