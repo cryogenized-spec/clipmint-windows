@@ -12,7 +12,7 @@ Use a spare Windows 11 x64 user profile. Treat this prototype as **unsigned expe
 8. Press `Ctrl+Shift+S` while the app is minimized. Make a synthetic region screenshot, press Esc to cancel another attempt, and confirm the file is saved locally without bringing up an extra window.
 9. Without installing FFmpeg or editing PATH, record a short rectangle using the **packaged FFmpeg**; stop it, play the MP4, and check no FFmpeg process remains. Verify that running without internet still records and that the bundled binary exists at `_internal/tools/ffmpeg.exe`.
 10. If multiple monitors use different DPI scale factors, document the monitor arrangement and compare selected boundaries with the captured pixels. Mark mixed-DPI unreliable until individually fixed.
-11. Test the system tray: close-to-tray retains monitoring; explicit Quit terminates monitoring and the process. Relaunch and verify local history survives.
+11. Test the system tray: close-to-tray retains monitoring while the notification tray exists; explicit Quit terminates monitoring and the process. Test a Windows environment without a usable system tray: clicking X must exit fully, not leave a hidden clipboard watcher. Relaunch and verify local history survives.
 12. Confirm the Linux Mint ClipMint installation and data are unchanged. There must be no Linux database path or updater shared with Windows.
 
 Record the exact Windows edition Git commit, SHA-256 of the built ZIP, Windows version, test operator, and pass/fail for each item before promoting beyond alpha.
