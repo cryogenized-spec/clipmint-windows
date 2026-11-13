@@ -3,7 +3,7 @@
 **Edition:** `ClipMint-Windows` (standalone, separate from `clipmint-linux`).
 **Source revision:** alpha prototype `0.1.0a1`.
 **Build format:** PyInstaller `--onedir` portable x64 ZIP; not an installer.
-**Release approval:** NOT APPROVED. A CI-built unsigned portable Windows EXE exists, but desktop field acceptance is incomplete.
+**Release approval:** NOT APPROVED. CI builds use an **untrusted, self-signed development Authenticode certificate** and GitHub-signed ZIP provenance; neither constitutes a trusted Windows publisher certificate. Desktop field acceptance is incomplete.
 
 ## Completed in the separate Windows source tree
 
@@ -15,7 +15,7 @@
 - [x] Region screenshot selector using Qt `QScreen.grabWindow`.
 - [x] FFmpeg `gdigrab` adapter for MP4 region recording; build-time download of pinned Windows x64 FFmpeg verified by SHA-256, included inside one portable ZIP (offline runtime).
 - [x] Experimental Win32 `RegisterHotKey` path without keyboard interception.
-- [x] Dedicated Windows PowerShell build script and GitHub Actions Windows x64 workflow.
+- [x] Dedicated Windows PowerShell build script and GitHub Actions Windows x64 workflow. GitHub CI development-signs the EXE and attests ZIP provenance; public trusted signing is pending.
 - [x] Unit tests for history, collections, privacy exclusions, isolation and recording command construction.
 
 ## Verification evidence
@@ -38,7 +38,7 @@
 
 **W2 — Field acceptance and feature parity:** active. Clipboard internal-copy detection uses a per-session Qt MIME token rather than swallowing the next clipboard signal; trayless close explicitly quits. Cross-process clipboard and tray behavior still needs physical acceptance. The self-contained package includes FFmpeg and licensing notices but real Windows desktop recording remains unverified. The Windows image drag bridge provides on-demand temporary PNG file URLs as well as Qt image MIME for file-upload targets; automated MIME tests are added but real Firefox upload validation is pending. Clipboard ownership, screen selection, mixed DPI, FFmpeg recording, startup and safe Quit still require physical acceptance. No claim of full Linux parity yet.
 
-**W3 — Public Windows beta:** pending (complete AGPL license text, artifact rights, Win32 validation, code signing or clear unsigned warnings, installation/updating policy and user approval).
+**W3 — Public Windows beta:** pending (complete AGPL license text, third-party rights, Win32 field validation, **trusted publisher code signing**, installation/updating policy and user approval). Ephemeral CI development signing does not satisfy trusted publisher signing.
 
 ## Separation contract
 
