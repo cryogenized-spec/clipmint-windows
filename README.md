@@ -10,7 +10,7 @@ A **standalone** Windows port prototype of ClipMint, with a separate directory, 
 - Clipboard monitoring while the process is active, with TEXT, IMAGE and local FILES support.
 - Three isolated collections: Work, Personal and Temporary; search, deduplication, preview, pin, delete and copy.
 - Local SQLite history in `%LOCALAPPDATA%\ClipMintWindows\history.sqlite3`, **plaintext by default**. No Linux database migration or shared configuration.
-- User-controlled monitoring checkbox, best-effort exclusion of obvious password/private-key strings (not a security boundary).
+- User-controlled monitoring checkbox, best-effort exclusion of obvious password/private-key strings (not a security boundary). Archive-to-clipboard copies use a per-session MIME marker instead of a timer, so a delayed own-copy event is ignored without suppressing the next unrelated clipboard change.
 - Single-monitor rectangle selection for screenshots, saved under `ClipMintWindows\Screenshots` and also archived in SQLite if within the 10 MB image cap.
 - Windows MP4 recording uses a **bundled, hash-verified FFmpeg x64 executable** with `gdigrab` and `libx264`; no separate installation, PATH configuration or runtime download is required.
 - Optional global `Ctrl+Shift+S` screenshot shortcut using Win32 `RegisterHotKey`, if the combination is free. No keyboard hooks or code injection.
