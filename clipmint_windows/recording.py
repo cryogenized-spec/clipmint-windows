@@ -5,7 +5,25 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
+
+
+def ffmpeg_executable() -> str:
+    """Prefer the packaged, offline FFmpeg. Never silently use PATH in frozen builds."""
+    frozen_root = getattr(sys, "_MEIPASS", None)
+    if frozen_root:
+        bundled = Path(frozen_root) / "tools" / "ffmpeg.exe"
+        if bundled.is_file():
+            return str(bundled)
+        raise RuntimeError("Bundled FFmpeg missing or damaged; reinstall ClipMint Windows")
+    development = Path(__file__).resolve().parent.parent / "vendor" / "ffmpeg.exe"
+    if development.is_file():
+        return str(development)
+    external = shutil.which("ffmpeg.exe") or shutil.which("ffmpeg")
+    if external:
+        return external
+    raise RuntimeError("FFmpeg unavailable in source checkout; run tools/prepare_ffmpeg.py")
 
 
 def gdigrab_args(ffmpeg: str, output: Path, x: int, y: int, width: int, height: int,
@@ -36,9 +54,7 @@ class Recorder:
     def start(self, rect: tuple[int, int, int, int], folder: Path) -> Path:
         if self.process:
             raise RuntimeError("Already recording")
-        ffmpeg = shutil.which("ffmpeg.exe") or shutil.which("ffmpeg")
-        if not ffmpeg:
-            raise RuntimeError("FFmpeg for Windows is not installed or not on PATH")
+        ffmpeg = ffmpeg_executable()
         folder.mkdir(parents=True, exist_ok=True)
         fd, name = tempfile.mkstemp(prefix="recording-", suffix=".mp4", dir=folder)
         os.close(fd)
