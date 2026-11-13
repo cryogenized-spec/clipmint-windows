@@ -506,7 +506,7 @@ class ClipMintWindow(QMainWindow):
             "Network: no analytics or auto-updates.\n"
             "Monitoring: toggle via the right-hand sidebar.\n"
             "Screenshot hotkey: Ctrl+Shift+S (if available).\n"
-            "Recording: needs a separately installed Windows FFmpeg on PATH.\n\n"
+            "Recording: bundled FFmpeg included offline; no separate installation.\n\n"
             "No Windows installer or automatic startup is enabled in this alpha.")
 
     def closeEvent(self, event):
