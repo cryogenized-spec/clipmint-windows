@@ -10,10 +10,13 @@ to generate a **new, ephemeral, non-exportable RSA 3072-bit signing key**
 for each build. It signs **only ClipMint-Windows.exe** using SHA-256
 Authenticode through `Set-AuthenticodeSignature`.
 
-For verification, the Windows CI runner temporarily trusts its OWN certificate,
-checks the executable signature, then removes that temporary trust and the
-signing key. No private keys, PFX or passwords are placed in the repository,
-GitHub artifact, or build log. The ZIP contains the **public**
+For verification, the Windows CI runner checks the Authenticode signer
+fingerprint and checks the signature status without placing the self-signed
+certificate in Trusted Root. The expected status is `NotTrusted` (the
+signature is present but its publisher isn't publicly trusted). This avoids
+interactive Windows trust prompts in unattended CI. The ephemeral signing
+private key is deleted after use. No private keys, PFX or passwords are
+placed in the repository, GitHub artifact, or build log. The ZIP contains the **public**
 `ClipMint-Development-Signer.cer` and `DEVELOPMENT-SIGNATURE.txt`.
 
 **CRITICAL: This certificate is NOT issued by a trusted certificate authority.**
