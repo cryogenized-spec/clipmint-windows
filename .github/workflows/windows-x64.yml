@@ -8,6 +8,9 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
+  artifact-metadata: write
 
 jobs:
   build:
@@ -74,16 +77,43 @@ jobs:
           $ffmpeg = './dist/ClipMint-Windows/_internal/tools/ffmpeg.exe'
           & $ffmpeg -hide_banner -version
           if ($LASTEXITCODE -ne 0) { throw 'Bundled frozen FFmpeg failed to launch' }
+      - name: Authenticode-sign ClipMint executable with GitHub CI development certificate
+        shell: pwsh
+        run: |
+          ./tools/sign-development.ps1 -ExePath ./dist/ClipMint-Windows/ClipMint-Windows.exe -OutputDirectory ./dist/ClipMint-Windows
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path ./dist/ClipMint-Windows/ClipMint-Development-Signer.cer)) { throw 'Signer public certificate missing' }
+          if (-not (Test-Path ./dist/ClipMint-Windows/DEVELOPMENT-SIGNATURE.txt)) { throw 'Development signing disclosure missing' }
+          $signed = Get-AuthenticodeSignature ./dist/ClipMint-Windows/ClipMint-Windows.exe
+          if (-not $signed.SignerCertificate) { throw 'Executable has no Authenticode signer' }
+          if ($signed.SignerCertificate.Subject -notlike '*UNTRUSTED*') { throw 'Unexpected signer subject' }
+          if ($signed.Status -eq [System.Management.Automation.SignatureStatus]::HashMismatch -or
+              $signed.Status -eq [System.Management.Automation.SignatureStatus]::NotSigned) {
+            throw "Signed EXE validation failed: $($signed.Status)"
+          }
       - name: Zip portable alpha and generate checksum
         shell: pwsh
         run: |
           New-Item -Type Directory -Force artifacts | Out-Null
-          Compress-Archive -Path dist/ClipMint-Windows/* -DestinationPath artifacts/ClipMint-Windows-x64-Complete-Alpha.zip -Force
-          (Get-FileHash artifacts/ClipMint-Windows-x64-Complete-Alpha.zip -Algorithm SHA256).Hash.ToLower() + '  ClipMint-Windows-x64-Complete-Alpha.zip' | Out-File -Encoding ascii artifacts/SHA256SUMS
+          Compress-Archive -Path dist/ClipMint-Windows/* -DestinationPath artifacts/ClipMint-Windows-x64-Complete-Development-Signed-Alpha.zip -Force
+          (Get-FileHash artifacts/ClipMint-Windows-x64-Complete-Development-Signed-Alpha.zip -Algorithm SHA256).Hash.ToLower() + '  ClipMint-Windows-x64-Complete-Development-Signed-Alpha.zip' | Out-File -Encoding ascii artifacts/SHA256SUMS
+      - name: GitHub Sigstore-signed build provenance for final ZIP
+        if: github.event_name != 'pull_request'
+        uses: actions/attest@v4
+        with:
+          subject-path: artifacts/ClipMint-Windows-x64-Complete-Development-Signed-Alpha.zip
+      - name: Verify GitHub signed provenance for final ZIP
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh attestation verify artifacts/ClipMint-Windows-x64-Complete-Development-Signed-Alpha.zip -R $env:GITHUB_REPOSITORY
+          if ($LASTEXITCODE -ne 0) { throw 'GitHub artifact attestation verification failed' }
       - name: Upload CI artifact (no GitHub release or installer publishing)
         uses: actions/upload-artifact@v4
         with:
-          name: ClipMint-Windows-x64-Complete-Alpha
+          name: ClipMint-Windows-x64-Complete-Development-Signed-Alpha
           path: artifacts/*
           if-no-files-found: error
           retention-days: 14

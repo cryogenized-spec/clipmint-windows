@@ -2,7 +2,7 @@
 
 Use a spare Windows 11 x64 user profile. Treat this prototype as **unsigned experimental software**. Avoid using real passwords, sensitive clipboard contents, customer files or private recordings during tests.
 
-1. Verify ZIP SHA-256, extract to a disposable directory and launch the `.exe` without administrator privileges. Check titlebar/taskbar icon and the approved ClipMint emblem.
+1. Verify ZIP SHA-256 and the GitHub build provenance (`gh attestation verify <zip> -R cryogenized-spec/clipmint-windows` if GitHub CLI is available). Extract the ZIP to a disposable directory and check `Get-AuthenticodeSignature .\ClipMint-Windows.exe`: it should show the **self-signed UNTRUSTED developer signer** matching `ClipMint-Development-Signer.cer`; it is not Microsoft-trusted. **Do not install the certificate into Trusted Root.** Launch without administrator privileges. Check titlebar/taskbar icon and the approved ClipMint emblem.
 2. Copy ordinary Unicode text, a URL, an image and a local test file; confirm the expected record type is created once and that the preview is correct.
 3. Test Work/Personal/Temporary isolation, literal search with `%` and `_`, pin/unpin, delete and persistence after Quit/restart.
 4. Pause monitoring, copy synthetic test content, resume monitoring and confirm content copied while paused is **not** backfilled.

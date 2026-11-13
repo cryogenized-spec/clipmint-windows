@@ -2,7 +2,7 @@
 
 A **standalone** Windows port prototype of ClipMint, with a separate directory, Windows-specific data storage, CI workflow, assets and release identity. It does **not** install to or modify the ClipMint Linux application. It is based on the approved ClipMint Crimson Archive visual palette, not a copy of the Linux runtime.
 
-**Status: developer alpha / not a public release.** The code has platform-neutral unit tests, but the complete GUI, Win32 global hotkey, FFmpeg recording, multi-monitor capture and portable EXE still require real Windows x64 acceptance testing. No digitally signed installer is supplied.
+**Status: developer alpha / not a public release.** GitHub Actions produces an Authenticode **self-signed development** EXE and a GitHub-signed provenance attestation for the ZIP. Neither is a commercially trusted publisher certificate or SmartScreen approval. The GUI, Win32 hotkey, FFmpeg desktop recording and multi-monitor capture still require real Windows x64 acceptance testing. No digitally signed public installer is supplied.
 
 ## Working in this alpha
 
@@ -38,9 +38,9 @@ py -3.12 -m venv .venv
 .\build-windows.ps1
 ```
 
-A successful build produces one comprehensive `artifacts\ClipMint-Windows-x64-Complete-Alpha.zip` containing `ClipMint-Windows.exe`, its bundled Qt/Python runtime, the approved icon, `_internal/tools/ffmpeg.exe`, and license/source notices. Extract the entire ZIP and run `ClipMint-Windows.exe` inside it. **Do not move the EXE out of its extracted folder; the accompanying files are required.** The `.exe` is **unsigned**. Only execute binaries you trust, and check the produced SHA-256 value. No elevated permissions are required by the application itself.
+A successful local build produces one comprehensive `artifacts\ClipMint-Windows-x64-Complete-Alpha.zip` containing `ClipMint-Windows.exe`, its bundled Qt/Python runtime, the approved icon, `_internal/tools/ffmpeg.exe`, and license/source notices. **The GitHub Actions build** additionally signs the EXE with an ephemeral *untrusted development* certificate, adds its public `.cer` and signature disclosure, and produces `ClipMint-Windows-x64-Complete-Development-Signed-Alpha.zip` with GitHub provenance attestation. Extract the entire ZIP and run `ClipMint-Windows.exe` inside it. **Do not move the EXE out of its extracted folder; the accompanying files are required.** The **local build** is unsigned by default; the **GitHub Actions build** has a self-signed Authenticode signature but is still untrusted by Windows. SmartScreen can still display Unknown Publisher. Do not install the included public development certificate into Trusted Root to bypass warnings. Only execute binaries you trust, verify the SHA-256 and, for GitHub builds, optionally check `gh attestation verify ClipMint-Windows-x64-Complete-Development-Signed-Alpha.zip -R cryogenized-spec/clipmint-windows`. No elevated permissions are required by the application itself.
 
-Alternatively, initialize this directory as its **own new GitHub repository** (suggested name `cryogenized-spec/clipmint-windows`) and push the files. Its independent `.github/workflows/windows-x64.yml` builds on GitHub's `windows-2025` runner and uploads a downloadable CI artifact. The workflow does **not** create public releases or change `clipmint-linux`.
+Alternatively, initialize this directory as its **own new GitHub repository** (suggested name `cryogenized-spec/clipmint-windows`) and push the files. Its independent `.github/workflows/windows-x64.yml` builds on GitHub's `windows-2025` runner and uploads a downloadable CI artifact. The workflow does **not** create public releases or change `clipmint-linux`. See [DEVELOPMENT-SIGNING.md](DEVELOPMENT-SIGNING.md) for the limits of development Authenticode signatures versus GitHub attestation and trusted publisher signing.
 
 ## Known limitations / privacy
 

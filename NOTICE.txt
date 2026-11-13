@@ -3,5 +3,5 @@ Source code license: AGPL-3.0-only, subject to proper copyright notices.
 Main project reference: https://github.com/cryogenized-spec/clipmint-linux
 The included ClipMint logo was approved for the project's use by the user.
 NO additional Crimson/Kohaku character illustration is included.
-No publicly signed or audited Windows release has been made.
+GitHub CI-created developer alpha packages use an ephemeral UNTRUSTED self-signed Authenticode code-signing certificate (NOT a verified publisher) and GitHub Sigstore build provenance. The local PowerShell build remains unsigned unless separately signed. No trusted publisher-signed or independently audited Windows release has been made. Never install the included development certificate into Trusted Root to bypass Windows warnings.
 GNU AGPL-3.0: https://www.gnu.org/licenses/agpl-3.0.txt
