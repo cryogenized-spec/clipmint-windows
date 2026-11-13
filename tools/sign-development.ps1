@@ -1,6 +1,6 @@
 # GitHub Actions only: create an ephemeral UNTRUSTED development code-signing
 # certificate, Authenticode-sign the Windows alpha EXE, verify it on the isolated
-# Windows runner, then remove all temporary trust entries and the private key.
+# Windows runner, then remove its ephemeral private key.
 #
 # This does NOT produce a Microsoft-trusted publisher identity and is NOT
 # intended to bypass Windows SmartScreen. The public .cer contains NO private key.
@@ -25,7 +25,6 @@ New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $outDir = (Resolve-Path -LiteralPath $OutputDirectory).ProviderPath
 
 $cert = $null
-$rootImported = $false
 try {
     # The private key exists only in this temporary CI runner's CurrentUser store.
     # Every build uses a NEW certificate. Never upload or export a PFX.
@@ -44,21 +43,21 @@ try {
     $publicCertPath = Join-Path $outDir 'ClipMint-Development-Signer.cer'
     Export-Certificate -Cert $cert -FilePath $publicCertPath -Force | Out-Null
 
-    # Trust the ephemeral public cert for verification ON THIS DISPOSABLE
-    # BUILD RUNNER ONLY. Remove it again before publishing the artifact.
-    Import-Certificate -FilePath $publicCertPath -CertStoreLocation 'Cert:\CurrentUser\Root' | Out-Null
-    $rootImported = $true
-
+    # Never import a self-signed certificate into Trusted Root, even on a CI
+    # runner: that can trigger an interactive Windows security prompt and hang
+    # unattended builds. An untrusted-but-intact Authenticode signature reports
+    # NotTrusted; it is not a trusted publisher identity.
     $signed = Set-AuthenticodeSignature -LiteralPath $target -Certificate $cert `
         -HashAlgorithm SHA256 -IncludeChain All
-    if ($signed.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
-        throw "Signature creation or local trust validation failed: $($signed.Status) / $($signed.StatusMessage)"
-    }
     $check = Get-AuthenticodeSignature -LiteralPath $target
-    if ($check.Status -ne [System.Management.Automation.SignatureStatus]::Valid -or
-        -not $check.SignerCertificate -or
-        $check.SignerCertificate.Thumbprint -ne $cert.Thumbprint) {
-        throw "Authenticode signature verification failed: $($check.Status) / $($check.StatusMessage)"
+    $accepted = @(
+        [System.Management.Automation.SignatureStatus]::Valid,
+        [System.Management.Automation.SignatureStatus]::NotTrusted
+    )
+    if (-not $check.SignerCertificate -or
+        $check.SignerCertificate.Thumbprint -ne $cert.Thumbprint -or
+        $check.Status -notin $accepted) {
+        throw "Authenticode signing/verification failed: $($check.Status) / $($check.StatusMessage)"
     }
 
     # The metadata explicitly identifies the certificate as UNTRUSTED and
@@ -80,14 +79,11 @@ try {
     )
     Set-Content -LiteralPath (Join-Path $outDir 'DEVELOPMENT-SIGNATURE.txt') `
         -Value $info -Encoding UTF8
-    Write-Host "PASS: SHA-256 Authenticode signed and verified (CI-only temporary trust): $($cert.Thumbprint)"
+    Write-Host "PASS: SHA-256 Authenticode development signer embedded ($($check.Status); untrusted publisher): $($cert.Thumbprint)"
 }
 finally {
     if ($cert) {
         $thumb = $cert.Thumbprint
-        if ($rootImported) {
-            Remove-Item -LiteralPath "Cert:\CurrentUser\Root\$thumb" -Force -ErrorAction SilentlyContinue
-        }
         # Removing the private key from the ephemeral runner's cert store is
         # best-effort; GitHub-hosted runners are also discarded after each job.
         Remove-Item -LiteralPath "Cert:\CurrentUser\My\$thumb" -DeleteKey -Force -ErrorAction SilentlyContinue
