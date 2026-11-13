@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from .history import History, default_data_dir
+from .clipboard_guard import OwnClipboardGuard
 from .drag_export import DragImageExport
 from .drag_mime import mime_for_drag
 from .hotkeys import WindowsHotkey
@@ -89,10 +90,10 @@ class ClipMintWindow(QMainWindow):
         self.history = history or History()
         self.recorder = Recorder()
         self._drag_exports = DragImageExport()
+        self._own_copy_guard = OwnClipboardGuard()
         self.monitoring = True
         self._quit_requested = False
         self._cleaned_up = False
-        self._suppress_next = False
         self._selected_id: int | None = None
         self._selector: RegionSelector | None = None
         self._record_start_pending = False
@@ -325,14 +326,11 @@ class ClipMintWindow(QMainWindow):
             self.preview_label.setText(row["body"][:2800])
 
     def clipboard_changed(self):
-        if self._suppress_next:
-            self._suppress_next = False
-            return
         if not self.monitoring:
             return
         cb = QApplication.clipboard()
         mime = cb.mimeData()
-        if not mime:
+        if not mime or self._own_copy_guard.is_own(mime):
             return
         ident = None
         if mime.hasImage():
@@ -372,13 +370,9 @@ class ClipMintWindow(QMainWindow):
             mime.setUrls([QUrl.fromLocalFile(p) for p in json.loads(row["body"])])
         else:
             mime.setText(row["body"])
-        self._suppress_next = True
+        self._own_copy_guard.mark(mime)
         QApplication.clipboard().setMimeData(mime)
-        QTimer.singleShot(250, self._clear_clipboard_suppression)
         self.status.showMessage("Copied to clipboard · without re-archiving", 3500)
-
-    def _clear_clipboard_suppression(self):
-        self._suppress_next = False
 
     def pin_selected(self):
         if self._selected_id is None:
@@ -510,17 +504,25 @@ class ClipMintWindow(QMainWindow):
             "No Windows installer or automatic startup is enabled in this alpha.")
 
     def closeEvent(self, event):
-        if self._tray and not self._quit_requested:
+        if self._tray and QSystemTrayIcon.isSystemTrayAvailable() and not self._quit_requested:
             self.hide()
             event.ignore()
         else:
             event.accept()
+            # Without a usable tray there is no way to restore a hidden window.
+            # Explicitly end monitoring rather than leave an invisible process.
+            if not self._quit_requested:
+                self.quit_app()
 
     def cleanup(self):
         if self._cleaned_up:
             return
         self._cleaned_up = True
         self._quit_requested = True
+        try:
+            QApplication.clipboard().dataChanged.disconnect(self.clipboard_changed)
+        except (RuntimeError, TypeError):
+            pass
         if self.recorder.process:
             self.recorder.abort()
         if self._hotkeys:
