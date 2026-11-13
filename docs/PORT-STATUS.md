@@ -13,7 +13,7 @@
 - [x] SQLite history, literal search, image/text/file captures, collections, pinned items and item preview.
 - [x] User-toggleable monitoring, best-effort sensitive-content filtering and no network telemetry.
 - [x] Region screenshot selector using Qt `QScreen.grabWindow`.
-- [x] Optional FFmpeg `gdigrab` adapter for MP4 region recording.
+- [x] FFmpeg `gdigrab` adapter for MP4 region recording; build-time download of pinned Windows x64 FFmpeg verified by SHA-256, included inside one portable ZIP (offline runtime).
 - [x] Experimental Win32 `RegisterHotKey` path without keyboard interception.
 - [x] Dedicated Windows PowerShell build script and GitHub Actions Windows x64 workflow.
 - [x] Unit tests for history, collections, privacy exclusions, isolation and recording command construction.
@@ -36,7 +36,7 @@
 
 **W1 — CI-built portable Windows executable:** complete as an unsigned alpha on the independent public `cryogenized-spec/clipmint-windows` repository. CI [43283518462](https://github.com/cryogenized-spec/clipmint-windows/actions/runs/43283518462) passed 14 unit tests, the Qt self-test and frozen executable smoke test; no physical acceptance yet.
 
-**W2 — Field acceptance and feature parity:** active. The Windows image drag bridge provides on-demand temporary PNG file URLs as well as Qt image MIME for file-upload targets; automated MIME tests are added but real Firefox upload validation is pending. Clipboard ownership, screen selection, mixed DPI, FFmpeg recording, startup and safe Quit still require physical acceptance. No claim of full Linux parity yet.
+**W2 — Field acceptance and feature parity:** active. The self-contained package includes FFmpeg and licensing notices but real Windows desktop recording remains unverified. The Windows image drag bridge provides on-demand temporary PNG file URLs as well as Qt image MIME for file-upload targets; automated MIME tests are added but real Firefox upload validation is pending. Clipboard ownership, screen selection, mixed DPI, FFmpeg recording, startup and safe Quit still require physical acceptance. No claim of full Linux parity yet.
 
 **W3 — Public Windows beta:** pending (complete AGPL license text, artifact rights, Win32 validation, code signing or clear unsigned warnings, installation/updating policy and user approval).
 
