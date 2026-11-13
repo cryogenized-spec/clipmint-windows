@@ -54,9 +54,16 @@ try {
         [System.Management.Automation.SignatureStatus]::Valid,
         [System.Management.Automation.SignatureStatus]::NotTrusted
     )
+    # Some Windows versions expose an untrusted self-signed root as
+    # UnknownError rather than NotTrusted. Accept ONLY that precise chain
+    # error; reject HashMismatch, NotSigned and every other UnknownError.
+    $untrustedRootOnly = (
+        $check.Status -eq [System.Management.Automation.SignatureStatus]::UnknownError -and
+        $check.StatusMessage -like '*root certificate which is not trusted by the trust provider*'
+    )
     if (-not $check.SignerCertificate -or
         $check.SignerCertificate.Thumbprint -ne $cert.Thumbprint -or
-        $check.Status -notin $accepted) {
+        ($check.Status -notin $accepted -and -not $untrustedRootOnly)) {
         throw "Authenticode signing/verification failed: $($check.Status) / $($check.StatusMessage)"
     }
 
