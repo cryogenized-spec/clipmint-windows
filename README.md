@@ -15,7 +15,7 @@ A **standalone** Windows port prototype of ClipMint, with a separate directory, 
 - Windows MP4 recording uses a **bundled, hash-verified FFmpeg x64 executable** with `gdigrab` and `libx264`; no separate installation, PATH configuration or runtime download is required.
 - Optional global `Ctrl+Shift+S` screenshot shortcut using Win32 `RegisterHotKey`, if the combination is free. No keyboard hooks or code injection.
 - Drag-copy text and existing files. When an archived IMAGE is deliberately dragged, ClipMint now prepares a per-session temporary PNG and advertises both a local-file URL and image pixels; this is intended for Windows/Firefox file inputs but still requires physical Windows acceptance. Ordinary application Quit attempts to remove temporary images; a crash may leave temporary copies in the user temp folder.
-- Optional system tray. An explicit Quit ends monitoring.
+- Optional system tray. Closing the window hides it only when a usable tray exists; without a tray, closing exits rather than leaving an invisible clipboard watcher. Explicit Quit ends monitoring.
 
 ## Requirements
 
