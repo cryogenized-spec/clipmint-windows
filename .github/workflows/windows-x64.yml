@@ -38,15 +38,32 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: python main.py --self-test
+      - name: Acquire hash-pinned Windows FFmpeg (build runner only)
+        shell: pwsh
+        run: |
+          python tools/prepare_ffmpeg.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path vendor/ffmpeg.exe)) { throw 'Pinned FFmpeg binary missing' }
+          if (-not (Test-Path vendor/licenses/FFmpeg-GPLv3.txt)) { throw 'FFmpeg GPL text missing' }
+      - name: Verify real MP4/H.264 encoding using bundled FFmpeg
+        shell: pwsh
+        run: |
+          & ./vendor/ffmpeg.exe -hide_banner -loglevel error -y -f lavfi -i "testsrc2=size=160x120:rate=5" -t 1 -an -c:v libx264 -pix_fmt yuv420p "$env:RUNNER_TEMP\clipmint-ffmpeg-test.mp4"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ((Get-Item "$env:RUNNER_TEMP\clipmint-ffmpeg-test.mp4").Length -lt 1000) { throw 'Bundled FFmpeg did not encode MP4' }
       - name: Generate Windows application icon
         shell: pwsh
         run: python tools/make_icon.py
       - name: Package Windows x64 desktop executable
         shell: pwsh
         run: |
-          python -m PyInstaller --noconfirm --clean --onedir --windowed --name ClipMint-Windows --icon assets/ClipMint.ico --add-data "assets;assets" main.py
+          python -m PyInstaller --noconfirm --clean --onedir --windowed --name ClipMint-Windows --icon assets/ClipMint.ico --add-data "assets;assets" --add-binary "vendor/ffmpeg.exe;tools" main.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if (-not (Test-Path dist/ClipMint-Windows/ClipMint-Windows.exe)) { throw 'EXE missing' }
+          if (-not (Test-Path dist/ClipMint-Windows/_internal/tools/ffmpeg.exe)) { throw 'Bundled FFmpeg missing in frozen app' }
+          Copy-Item README.md, LICENSE, NOTICE.txt, THIRD-PARTY-FFMPEG.md -Destination dist/ClipMint-Windows/
+          Copy-Item vendor/licenses/FFmpeg-GPLv3.txt -Destination dist/ClipMint-Windows/
+          if (-not (Test-Path dist/ClipMint-Windows/FFmpeg-GPLv3.txt)) { throw 'FFmpeg GPL text not packaged' }
       - name: Frozen executable smoke test (not a desktop field test)
         shell: pwsh
         env:
@@ -54,16 +71,19 @@ jobs:
         run: |
           & ./dist/ClipMint-Windows/ClipMint-Windows.exe --self-test
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $ffmpeg = './dist/ClipMint-Windows/_internal/tools/ffmpeg.exe'
+          & $ffmpeg -hide_banner -version
+          if ($LASTEXITCODE -ne 0) { throw 'Bundled frozen FFmpeg failed to launch' }
       - name: Zip portable alpha and generate checksum
         shell: pwsh
         run: |
           New-Item -Type Directory -Force artifacts | Out-Null
-          Compress-Archive -Path dist/ClipMint-Windows/* -DestinationPath artifacts/ClipMint-Windows-x64-alpha.zip -Force
-          (Get-FileHash artifacts/ClipMint-Windows-x64-alpha.zip -Algorithm SHA256).Hash.ToLower() + '  ClipMint-Windows-x64-alpha.zip' | Out-File -Encoding ascii artifacts/SHA256SUMS
+          Compress-Archive -Path dist/ClipMint-Windows/* -DestinationPath artifacts/ClipMint-Windows-x64-Complete-Alpha.zip -Force
+          (Get-FileHash artifacts/ClipMint-Windows-x64-Complete-Alpha.zip -Algorithm SHA256).Hash.ToLower() + '  ClipMint-Windows-x64-Complete-Alpha.zip' | Out-File -Encoding ascii artifacts/SHA256SUMS
       - name: Upload CI artifact (no GitHub release or installer publishing)
         uses: actions/upload-artifact@v4
         with:
-          name: ClipMint-Windows-x64-alpha
+          name: ClipMint-Windows-x64-Complete-Alpha
           path: artifacts/*
           if-no-files-found: error
           retention-days: 14
